@@ -59,7 +59,3 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/weatherapp:latest .
 
-      - name: Build Docker image
-        run: |
-            docker build -t ${{ secrets.DOCKER_USERNAME }}/weatherapp:latest .
-        
