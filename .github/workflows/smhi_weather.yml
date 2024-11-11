@@ -38,9 +38,28 @@ jobs:
       - name: Run unit tests
         run: python -m unittest discover -s tests
 
+      # Upload error log if tests fail and `log_errors` is true-
+      - name: Log errors if tests fail (only if `log_errors == 'true'`)
+        if: ${{ github.event.inputs.log_errors == 'true' && failure() }}
+        run: |
+          echo "Test failed, generating error log" > error_log.txt
+          echo "Error details: $(cat error_log.txt)"
+          echo "Uploading error log"
+          # Upload error log artifact
+          echo "Error log uploaded"
+
+      # Upload artifact step, only if `log_errors == 'true'`
+      - name: Upload error log artifact
+        if: ${{ github.event.inputs.log_errors == 'true' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: error-log
+          path: error_log.txt
+
   dockerhub:
     runs-on: ubuntu-latest
     needs: test  # Ensures 'dockerhub' job runs after 'test' job
+    if: ${{ success() }}  # Ensures this job only runs if the 'test' job was successful
 
     steps:
       - name: Checkout code
@@ -57,8 +76,9 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/weatherapp:latest .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/weatherapp:smhi .
           
       - name: Push Docker image to Docker Hub
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/weatherapp:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/weatherapp:smhi .
+
